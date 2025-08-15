@@ -1,0 +1,2 @@
+cristhian,marquez,1751486364,cristhianmarquez72@gmail.com,$2b$12$aCbYOg7FR33JBCuBgNArOOAFajo8NTBfLtlrzAjJ5qw2q4vuj4lL.,Administrador
+david,marquez,1751486331,chocopvp@gmail.com,$2b$12$6puBiOqtfdLLk1r3Yt9ToesP87xZBPvlBp5Q1/LwtQkP4awlnRlmW,Administrador
