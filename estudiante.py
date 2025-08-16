@@ -13,10 +13,26 @@ def crearProyecto():
         if tarea=="":
             break
         else:
-            verEstudiantes()
+            Descripcion=input("Ingrese la descripcion de la tarea: ")
+            while True:
+                responsable=input("Ingrese el responsable de la tarea (Cedula): ")
+                with open (estudiantes,"r") as archivo:
+                    lineas = archivo.readlines()
+                for linea in lineas:
+                    datos=linea.strip().split(",")
+                    if datos[2]==responsable:
+                        if datos[5]!="Estudiante":
+                            print("El responsable debe ser un estudiante. Intente de nuevo.")
+                        else:
+                            break
+                else:
+                    print("Cedula no encontrada. Intente de nuevo.")  
+                break
+                         
+        tareas.append({"nombre": tarea, "descripcion": Descripcion, "responsable": responsable})   
 
     with open(proyeto, "a") as archivo:
-        archivo.write(f"{proyecto},{costo},{fehceInicio},{fechaFin}\n")
+        archivo.write(f"{proyecto},{costo},{fehceInicio},{fechaFin},{tarea}\n")
         print("Proyecto creado exitosamente.")
 
 def verEstudiantes():
@@ -25,5 +41,5 @@ def verEstudiantes():
                     datos = linea.strip().split(",")
                     if datos[5]=="Estudiante":
                         print(f"Cedula: {datos[2]} Nombre: {datos[0].title()} {datos[1].title()}")
-                      
-verEstudiantes()
+
+                    
