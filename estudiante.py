@@ -32,7 +32,8 @@ def crearProyecto():
         tareas.append({"nombre": tarea, "descripcion": Descripcion, "responsable": responsable})   
 
     with open(proyeto, "a") as archivo:
-        archivo.write(f"{proyecto},{costo},{fehceInicio},{fechaFin},{tarea}\n")
+        for t in tareas:
+            archivo.write(f"{proyecto},{costo},{fehceInicio},{fechaFin},{t['nombre']},{t['descripcion']},{t['responsable']}\n")
         print("Proyecto creado exitosamente.")
 
 def verEstudiantes():
@@ -42,4 +43,4 @@ def verEstudiantes():
                     if datos[5]=="Estudiante":
                         print(f"Cedula: {datos[2]} Nombre: {datos[0].title()} {datos[1].title()}")
 
-                    
+crearProyecto()                    
