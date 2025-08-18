@@ -1,0 +1,22 @@
+[
+  {
+    "proyecto": "a",
+    "costo": "a",
+    "fehceInicio": "12/09/2000",
+    "fechaFin": "12/09/2000",
+    "responsableProyecto": {
+      "cedula": "1751486364",
+      "nombre": "cristhian marquez"
+    },
+    "tareas": [
+      {
+        "nombre": "a",
+        "descripcion": "a",
+        "responsable": {
+          "cedula": "1751486364",
+          "nombre": "cristhian marquez"
+        }
+      }
+    ]
+  }
+]
