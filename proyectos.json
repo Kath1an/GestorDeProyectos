@@ -1,0 +1,54 @@
+[
+  {
+    "proyecto": "cristhian",
+    "costo": "200",
+    "categoria": "medicina",
+    "descripcion": "medicina",
+    "materiales": "cosas",
+    "fehceInicio": "12/09/2000",
+    "fechaFin": "12/10/2000",
+    "responsableProyecto": {
+      "cedula": "1751486364",
+      "nombre": "cristhian marquez"
+    },
+    "tareas": [
+      {
+        "nombre": "salir",
+        "descripcion": "salir con cosas",
+        "fecha_inicio": "12/09/2000",
+        "fecha_fin": "12/10/2000",
+        "responsable": {
+          "cedula": "1751486364",
+          "nombre": "cristhian marquez"
+        },
+        "estado": "En ejecución"
+      }
+    ]
+  },
+  {
+    "proyecto": "probar proyecto",
+    "costo": "1000",
+    "categoria": "salud",
+    "descripcion": "se prueba el codigo",
+    "materiales": "computadora",
+    "fehceInicio": "25/08/2025",
+    "fechaFin": "26/08/2025",
+    "responsableProyecto": {
+      "cedula": "1751486364",
+      "nombre": "cristhian marquez"
+    },
+    "tareas": [
+      {
+        "nombre": "saluda",
+        "descripcion": "tiene que saludar",
+        "fecha_inicio": "28/08/2025",
+        "fecha_fin": "29/08/2025",
+        "responsable": {
+          "cedula": "1751486364",
+          "nombre": "cristhian marquez"
+        },
+        "estado": "Completada"
+      }
+    ]
+  }
+]

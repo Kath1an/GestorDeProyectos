@@ -1,1 +1,2 @@
-cristhian,marquez,1751486364,cristhianmarquez72@gmail.com,$2b$12$.Niahvtmkr6GTdSYWlxClOhWUvKgJmRGN.l9MD.6pDb2YpDyc91Ra,Estudiante
+cristhian,marquez,1751486364,cristhianmarquez72@gmail.com,$2b$12$CgHtGJKYtCoVcMkASy5GH.edsBXd83FGpFMZfdDHNi/rN/aT/hg5.,Estudiante
+cristhian ,marquez,1751486364,cristhian@gmail.com,$2b$12$FlWpr9MEkjNct/5zZRmIVOyvjfCe9.ILAOhYknbPfyM5rtX2O7OYG,Administrador

@@ -1,179 +1,117 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox
 import bcrypt
-import re
-from datetime import datetime
 
-ARCHIVO_REGISTRO = "registro.txt"
-ARCHIVO_PROYECTOS = "proyetos.txt"
+RUTA_USUARIOS = "registro.txt"  # tu archivo con usuarios: nombre,apellido,cedula,correo,hash,rol
 
-# ====== FUNCIONES DE UTILIDAD ======
-def valida_contraseña(contraseña):
-    if len(contraseña) < 8:
-        return False, "Debe tener mínimo 8 caracteres"
-    if not re.search(r"[A-Z]", contraseña):
-        return False, "Debe tener al menos una letra mayúscula."
-    if not re.search(r"[a-z]", contraseña):
-        return False, "Debe tener al menos una letra minúscula."
-    if not re.search(r"[0-9]", contraseña):
-        return False, "Debe tener al menos un número."
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", contraseña):
-        return False, "Debe tener al menos un caracter especial."
-    return True, ""
-
-def leer_usuarios():
+# --------- Núcleo reusable: solo verifica credenciales ----------
+def verificar_credenciales(correo: str, contrasena: str, ruta_archivo: str = RUTA_USUARIOS) -> bool:
+    """
+    Retorna True si el correo existe y el hash coincide con la contraseña.
+    Formato esperado por línea: nombre,apellido,cedula,correo,hash,rol
+    """
     try:
-        with open(ARCHIVO_REGISTRO, "r") as f:
-            return [line.strip().split(",") for line in f if line.strip()]
+        with open(ruta_archivo, "r", encoding="utf-8") as f:
+            for linea in f:
+                datos = linea.strip().split(",")
+                if len(datos) < 6:
+                    continue
+                correo_guardado = datos[3].strip()
+                hash_guardado = datos[4].strip().encode("utf-8")
+                if correo == correo_guardado:
+                    return bcrypt.checkpw(contrasena.encode("utf-8"), hash_guardado)
     except FileNotFoundError:
-        return []
+        # Si no existe el archivo, nadie puede iniciar sesión
+        return False
+    return False
 
-def guardar_usuario(nombre, apellido, cedula, correo, contraseña, rol):
-    salt = bcrypt.gensalt()
-    hash_str = bcrypt.hashpw(contraseña.encode('utf-8'), salt).decode('utf-8')
-    with open(ARCHIVO_REGISTRO, "a") as f:
-        f.write(f"{nombre},{apellido},{cedula},{correo},{hash_str},{rol}\n")
+# --------- GUI (Tkinter) ----------
+def run_gui():
+    inicio = tk.Tk()
+    inicio.title("Gestor de Proyectos")
+    inicio.geometry("600x360")
 
-def guardar_proyecto(nombre, costo, fecha_inicio, fecha_fin, tareas):
-    with open(ARCHIVO_PROYECTOS, "a") as f:
-        for tarea in tareas:
-            f.write(f"{nombre},{costo},{fecha_inicio},{fecha_fin},{tarea['nombre']},{tarea['descripcion']},{tarea['responsable']}\n")
+    # Tarjeta centrada
+    frame = tk.Frame(inicio, bg="white", padx=24, pady=20, bd=1, relief="groove")
+    frame.pack(expand=True)
 
-# ====== INTERFAZ ======
-class App(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Clínica Los Gemelos")
-        self.geometry("500x400")
-        self.usuario_actual = None
-        self.mostrar_login()
+    # Para llevar la cuenta de intentos solo en esta sesión GUI
+    run_gui.intentos = 0
 
-    def limpiar_frame(self):
-        for widget in self.winfo_children():
-            widget.destroy()
+    def iniciar():
+        correo = entrada_correo.get().strip()
+        contrasena = entrada_contrasena.get()
 
-    def mostrar_login(self):
-        self.limpiar_frame()
-        tk.Label(self, text="Inicio de Sesión", font=("Arial", 16)).pack(pady=10)
+        if not correo or not contrasena:
+            messagebox.showwarning("Campos vacíos", "Completa correo y contraseña.")
+            return
 
-        tk.Label(self, text="Correo:").pack()
-        correo_entry = tk.Entry(self)
-        correo_entry.pack()
+        ok = verificar_credenciales(correo, contrasena, RUTA_USUARIOS)
+        if ok:
+            # Limpia y muestra bienvenida
+            for w in frame.winfo_children():
+                w.destroy()
+            tk.Label(frame, text=f"Bienvenido, {correo}", bg="white", font=("Arial", 16)).grid(row=0, column=0, padx=10, pady=20)
+        else:
+            run_gui.intentos += 1
+            restantes = 3 - run_gui.intentos
+            messagebox.showerror("Credenciales inválidas", f"Correo o contraseña incorrectos.\nIntentos restantes: {max(restantes,0)}")
+            if run_gui.intentos >= 3:
+                # Aquí podrías llamar a tu lógica de bloqueo si quieres
+                messagebox.showwarning("Bloqueado", "Has excedido el número de intentos.")
+                # Deshabilitar botón para simular bloqueo
+                btn_iniciar.config(state="disabled")
 
-        tk.Label(self, text="Contraseña:").pack()
-        contr_entry = tk.Entry(self, show="*")
-        contr_entry.pack()
+    # --- Widgets ---
+    tk.Label(frame, text="Correo:", bg="white").grid(row=0, column=0, padx=10, pady=10, sticky="e")
+    entrada_correo = tk.Entry(frame, width=30)
+    entrada_correo.grid(row=0, column=1, padx=10, pady=10)
 
-        def intentar_login():
-            correo = correo_entry.get()
-            contraseña = contr_entry.get()
-            for datos in leer_usuarios():
-                if correo == datos[3] and bcrypt.checkpw(contraseña.encode('utf-8'), datos[4].encode('utf-8')):
-                    self.usuario_actual = datos
-                    messagebox.showinfo("Éxito", f"Bienvenido {datos[0]}")
-                    if datos[5] == "Administrador":
-                        self.menu_admin()
-                    else:
-                        self.menu_estudiante()
-                    return
-            messagebox.showerror("Error", "Credenciales inválidas")
+    tk.Label(frame, text="Contraseña:", bg="white").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+    entrada_contrasena = tk.Entry(frame, show="*", width=30)
+    entrada_contrasena.grid(row=1, column=1, padx=10, pady=10)
 
-        tk.Button(self, text="Ingresar", command=intentar_login).pack(pady=10)
-        tk.Button(self, text="Registrar usuario", command=self.registrar_usuario).pack()
+    btn_iniciar = tk.Button(frame, text="Iniciar sesión", command=iniciar)
+    btn_iniciar.grid(row=2, column=0, padx=10, pady=15, sticky="e")
 
-    def registrar_usuario(self):
-        self.limpiar_frame()
-        tk.Label(self, text="Registro de Usuario", font=("Arial", 16)).pack(pady=10)
+    btn_recuperar = tk.Button(frame, text="Recuperar contraseña", command=lambda: messagebox.showinfo("Recuperar", "Aquí iría tu flujo de recuperación"))
+    btn_recuperar.grid(row=2, column=1, padx=10, pady=15, sticky="w")
 
-        campos = {}
-        for campo in ["Nombre", "Apellido", "Cédula", "Correo", "Contraseña"]:
-            tk.Label(self, text=campo + ":").pack()
-            e = tk.Entry(self, show="*" if campo == "Contraseña" else "")
-            e.pack()
-            campos[campo] = e
+    # Enter para iniciar
+    inicio.bind("<Return>", lambda _e: iniciar())
 
-        rol_var = tk.StringVar(value="Administrador")
-        tk.OptionMenu(self, rol_var, "Administrador", "Estudiante").pack()
+    # Focus inicial
+    entrada_correo.focus()
 
-        def guardar():
-            nombre = campos["Nombre"].get()
-            apellido = campos["Apellido"].get()
-            cedula = campos["Cédula"].get()
-            correo = campos["Correo"].get()
-            contraseña = campos["Contraseña"].get()
-            es_valida, mensaje = valida_contraseña(contraseña)
-            if not es_valida:
-                messagebox.showerror("Error", mensaje)
-                return
-            guardar_usuario(nombre, apellido, cedula, correo, contraseña, rol_var.get())
-            messagebox.showinfo("Éxito", "Usuario registrado correctamente")
-            self.mostrar_login()
+    inicio.mainloop()
 
-        tk.Button(self, text="Guardar", command=guardar).pack(pady=10)
-        tk.Button(self, text="Volver", command=self.mostrar_login).pack()
+# --------- Consola (si quieres seguir usando pwinput) ----------
+def inicio_consola():
+    import pwinput  # solo necesario en consola
+    a = RUTA_USUARIOS
+    intentos = 0
+    print("======= CLINICA GEMELOS =======")
+    while True:
+        correo = input("Correo electronico: ").strip()
+        contr_ingresada = pwinput.pwinput("Contraseña: ")
+        autenticado = verificar_credenciales(correo, contr_ingresada, a)
 
-    def menu_admin(self):
-        self.limpiar_frame()
-        tk.Label(self, text="Menú Administrador", font=("Arial", 16)).pack(pady=10)
-        tk.Button(self, text="Registrar Usuario", command=self.registrar_usuario).pack()
-        tk.Button(self, text="Cerrar sesión", command=self.mostrar_login).pack(pady=10)
+        if autenticado:
+            print("Inicio exitoso")
+            break
+        else:
+            intentos += 1
+            print("Credenciales inválidas")
+            print("Intentos:", intentos)
+            if intentos == 3:
+                print("Has excedido el número de intentos")
+                # bloqueo()  # aquí llamas tu lógica de bloqueo si la tienes
+                break
 
-    def menu_estudiante(self):
-        self.limpiar_frame()
-        tk.Label(self, text="Menú Estudiante", font=("Arial", 16)).pack(pady=10)
-        tk.Button(self, text="Crear Proyecto", command=self.crear_proyecto).pack()
-        tk.Button(self, text="Cerrar sesión", command=self.mostrar_login).pack(pady=10)
-
-    def crear_proyecto(self):
-        self.limpiar_frame()
-        tk.Label(self, text="Crear Proyecto", font=("Arial", 16)).pack(pady=10)
-
-        campos = {}
-        for campo in ["Nombre", "Costo", "Fecha inicio (dd/mm/yyyy)", "Fecha fin (dd/mm/yyyy)"]:
-            tk.Label(self, text=campo + ":").pack()
-            e = tk.Entry(self)
-            e.pack()
-            campos[campo] = e
-
-        tareas = []
-
-        def agregar_tarea():
-            top = tk.Toplevel(self)
-            top.title("Agregar tarea")
-            tk.Label(top, text="Nombre tarea:").pack()
-            tarea_nom = tk.Entry(top)
-            tarea_nom.pack()
-            tk.Label(top, text="Descripción:").pack()
-            tarea_desc = tk.Entry(top)
-            tarea_desc.pack()
-            tk.Label(top, text="Cédula responsable:").pack()
-            tarea_resp = tk.Entry(top)
-            tarea_resp.pack()
-
-            def guardar_tarea():
-                tareas.append({
-                    "nombre": tarea_nom.get(),
-                    "descripcion": tarea_desc.get(),
-                    "responsable": tarea_resp.get()
-                })
-                top.destroy()
-
-            tk.Button(top, text="Guardar", command=guardar_tarea).pack()
-
-        tk.Button(self, text="Agregar tarea", command=agregar_tarea).pack()
-        tk.Button(self, text="Guardar proyecto", command=lambda: self.guardar_proyecto_ui(campos, tareas)).pack(pady=10)
-        tk.Button(self, text="Volver", command=self.menu_estudiante).pack()
-
-    def guardar_proyecto_ui(self, campos, tareas):
-        guardar_proyecto(
-            campos["Nombre"].get(),
-            campos["Costo"].get(),
-            campos["Fecha inicio (dd/mm/yyyy)"].get(),
-            campos["Fecha fin (dd/mm/yyyy)"].get(),
-            tareas
-        )
-        messagebox.showinfo("Éxito", "Proyecto guardado correctamente")
-        self.menu_estudiante()
-
+# ----------------- ELIGE UNO -----------------
 if __name__ == "__main__":
-    App().mainloop()
+    # 1) Para GUI:
+    run_gui()
+
+    # 2) Si quieres probar consola, comenta la línea de arriba y descomenta esta:
+    # inicio_consola()
